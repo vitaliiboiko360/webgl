@@ -6,38 +6,58 @@ function main() {
     animateSquare();
 
     const canvas = document.getElementById("glCanvas");
-    canvas.onclick = function(){
-        console.log("clicked " + counter++);
-    };
-    canvas.ondrag = function(){
-        console.log("draged");
-    };
+    // canvas.onclick = function(){
+    //     console.log("clicked " + counter++);
+    // };
+    // canvas.ondrag = function(){
+    //     console.log("draged");
+    // };
 
     let moved;
-    let downListener = () => {
-    moved = false;
+    let pressed;
+    let pointMouseInfo = {
+        x : 0,
+        y : 0,
+        xd : 0,
+        yd : 0
     };
-    canvas.addEventListener('mousedown', downListener)
-    let moveListener = () => {
-    moved = true;
+    let downListener = (mouseEvent) => {
+        moved = false;
+        pointMouseInfo.x = mouseEvent.clientX;
+        pointMouseInfo.y = mouseEvent.clientY;
+        pressed = true;
     };
-    canvas.addEventListener('mousemove', moveListener)
-    
-    let upListener = () => {
-    if (moved) {
-        console.log('moved');
-    } else {
-        console.log('not moved');
+    window.addEventListener('mousedown', downListener)
+
+    let moveListener = (mouseEvent) => { 
+        moved = true;
+        
+        if (pressed)
+        {
+            squareRotation = pointMouseInfo.x - mouseEvent.clientX;
+        }
     };
+    window.addEventListener('mousemove', moveListener)
+
+    let upListener = (mouseEvent) => {
+        if (moved) {
+            console.log('moved');
+            console.log("x was moved by " + (pointMouseInfo.x - mouseEvent.clientX));
+            console.log("y was moved by " + (pointMouseInfo.y - mouseEvent.clientY));
+           
+        } else {
+            console.log('not moved');
+        };
+        pointMouseInfo.x = 0;
+        pointMouseInfo.y = 0;
+        pressed = false;
     };
-    canvas.addEventListener('mouseup', upListener);
+    window.addEventListener('mouseup', upListener);
 
     // // release memory
     // canvas.removeEventListener('mousedown', downListener);
     // canvas.removeEventListener('mousemove', moveListener);
     // canvas.removeEventListener('mouseup', upListener);
-
-
 }
 
 // init animation
