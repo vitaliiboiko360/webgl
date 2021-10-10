@@ -1,6 +1,7 @@
 main();
 
 var squareRotation = 0.0;
+var deltaTime = 0.0;
 var counter = 0;
 function main() {
     animateSquare();
@@ -18,13 +19,14 @@ function main() {
     let pointMouseInfo = {
         x : 0,
         y : 0,
-        xd : 0,
-        yd : 0
+        lastX : 0,
+        lastY : 0
     };
     let downListener = (mouseEvent) => {
-        moved = false;
-        pointMouseInfo.x = mouseEvent.clientX;
-        pointMouseInfo.y = mouseEvent.clientY;
+        moved = false
+        let curX = mouseEvent.clientX;
+        pointMouseInfo.x = curX;
+        pointMouseInfo.lastX = curX;
         pressed = true;
     };
     window.addEventListener('mousedown', downListener)
@@ -34,7 +36,16 @@ function main() {
         
         if (pressed)
         {
-            squareRotation = pointMouseInfo.x - mouseEvent.clientX;
+            let curX = mouseEvent.clientX;
+            let deltaX = (Math.abs(pointMouseInfo.lastX) - Math.abs(mouseEvent.clientX));
+            if (Math.abs(deltaX) > 10)
+            {
+                deltaTime = deltaX;
+                pointMouseInfo.lastX = curX;
+                console.log(squareRotation);
+            }
+            
+            //console.log(deltaX)
         }
     };
     window.addEventListener('mousemove', moveListener)
@@ -120,12 +131,12 @@ function animateSquare()
 
     var then = 0;
     // draw the scene repeatedly
-    function render(now) {
-        now *= 0.0005;
-        const deltaTime = now - then;
-        then = now;
+    function render() {
+        // now *= 0.0005;
+        // const deltaTime = now - then;
+        // then = now;
 
-        drawScene(gl, programInfo, buffers, deltaTime);
+        drawScene(gl, programInfo, buffers, deltaTime*100);
 
         requestAnimationFrame(render);
     }
