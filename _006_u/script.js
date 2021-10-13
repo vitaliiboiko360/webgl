@@ -6,6 +6,19 @@ function main() {
 
     const canvas = document.getElementById("glCanvas");
 
+    // var win = window,
+    // doc = document,
+    // docElem = doc.documentElement,
+    // body = doc.getElementsByTagName('body')[0],
+    // width = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    // height = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    const width  = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const height = window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight;
+    canvas.width = width;
+    canvas.height = height;
+    console.log(width + ", " + height);
+    console.log(canvas.width + ', ' + canvas.height);
+
     const gl = canvas.getContext("webgl");
 
     if(gl === null) {
@@ -99,7 +112,7 @@ function setupMouseControl() {
             const path = Math.sqrt(Math.pow(Math.abs(mousePositionInfo.x - mouseEvent.clientX),2) + 
             Math.pow(Math.abs(deltaY),2));
             console.log('path=' + path);
-            console.log('angle(slope)=' + (Math.abs(deltaY)/path));
+            console.log('angle(slope)=' + (deltaY/path));
         }
         isMouseDown = false;
         console.log('mouseup');
