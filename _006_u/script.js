@@ -72,7 +72,29 @@ function main() {
     }
 
     requestAnimationFrame(render);
+    
+    setupMouseControl();
 }
+
+function setupMouseControl() {
+    var isMouseDown = false;
+    var isMouseUp = false;
+    document.onmousedown = function(mouseEvent) {
+        isMouseDown = true;
+        console.log('mousedown');
+    };
+    document.onmouseup = function(mouseEvent) {
+        isMouseDown = false;
+        console.log('mouseup');
+    };
+    document.onmousemove = function(mouseEvent) {
+        if(isMouseDown) {
+            console.log("we're moving");
+        }
+    };
+
+}
+
 
 function initBuffers(gl) {
     // positions:
