@@ -79,17 +79,34 @@ function main() {
 function setupMouseControl() {
     var isMouseDown = false;
     var isMouseUp = false;
+
+    var mousePositionInfo = {
+        x : 0,
+        y : 0,
+    };
+
     document.onmousedown = function(mouseEvent) {
         isMouseDown = true;
+        mousePositionInfo.x = mouseEvent.clientX;
+        mousePositionInfo.y = mouseEvent.clientY; 
         console.log('mousedown');
     };
     document.onmouseup = function(mouseEvent) {
+        if (isMouseDown) {
+            console.log('we started at x=', mousePositionInfo.x + ',y=' + mousePositionInfo.y);
+            console.log('ended at x=', mouseEvent.clientX + ',y=' + mouseEvent.clientY);
+            const deltaY = mousePositionInfo.y - mouseEvent.clientY;
+            const path = Math.sqrt(Math.pow(Math.abs(mousePositionInfo.x - mouseEvent.clientX),2) + 
+            Math.pow(Math.abs(deltaY),2));
+            console.log('path=' + path);
+            console.log('angle(slope)=' + (Math.abs(deltaY)/path));
+        }
         isMouseDown = false;
         console.log('mouseup');
     };
     document.onmousemove = function(mouseEvent) {
         if(isMouseDown) {
-            console.log("we're moving");
+            //console.log("we're moving");
         }
     };
 
