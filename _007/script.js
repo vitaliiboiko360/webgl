@@ -29,7 +29,7 @@ function main() {
     
     void main() {
         gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-        vColor = aTextureCoord;
+        vTextureCoord = aTextureCoord;
     }
     `;
     
