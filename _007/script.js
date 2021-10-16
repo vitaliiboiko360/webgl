@@ -238,23 +238,6 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
     }
 
-    {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
-    }
-
     // tell webgl how to pull out the texture coordinates from buffer
     {
         const num = 2; // every coordinate composed of 2 values
@@ -362,6 +345,7 @@ function loadTexture(gl, url) {
                     pixel);
 
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.onload = function() {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
@@ -388,4 +372,8 @@ function loadTexture(gl, url) {
     image.src = url;
 
     return texture;
+}
+
+function isPowerOf2(value) {
+    return (value & (value - 1)) == 0;
 }
