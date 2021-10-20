@@ -330,6 +330,14 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 
     gl.useProgram(programInfo.program);
 
+    const normalMatrix = mat4.create();
+    mat4.invert(normalMatrix, modelViewMatrix);
+    mat4.transpose(normalMatrix, normalMatrix);
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.normalMatrix,
+        false,
+        normalMatrix);
+
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
