@@ -202,11 +202,9 @@ function initBuffers(gl) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-        // normals
+    
+    // normals
     //
-    const normalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-  
     const vertexNormals = [
       // Front
        0.0,  0.0,  1.0,
@@ -244,14 +242,15 @@ function initBuffers(gl) {
       -1.0,  0.0,  0.0,
       -1.0,  0.0,  0.0
     ];
-  
+    const normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
                   gl.STATIC_DRAW);
 
 
     return {
         position: positionBuffer,
-        normals: normalBuffer,
+        normal: normalBuffer,
         textureCoord: textureCoordBuffer,
         indices: indexBuffer,
     };
@@ -306,6 +305,19 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
     }
 
+
+    // tell webgl how to pull out the texture coordinates from buffer
+    {
+        const num = 2; // every coordinate composed of 2 values
+        const type = gl.FLOAT; // the data in the buffer is 32 bit float
+        const normalize = false; // don't normalize
+        const stride = 0; // how many bytes to get from one set to the next
+        const offset = 0; // how many bytes inside the buffer to start from
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+        gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, num, type, normalize, stride, offset);
+        gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+    }
+
     // Tell WebGL how to pull out the normals from
     // the normal buffer into the vertexNormal attribute.
     {
@@ -326,17 +338,10 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
             programInfo.attribLocations.vertexNormal);
     }
 
-    // tell webgl how to pull out the texture coordinates from buffer
-    {
-        const num = 2; // every coordinate composed of 2 values
-        const type = gl.FLOAT; // the data in the buffer is 32 bit float
-        const normalize = false; // don't normalize
-        const stride = 0; // how many bytes to get from one set to the next
-        const offset = 0; // how many bytes inside the buffer to start from
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
-        gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, num, type, normalize, stride, offset);
-        gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
-    }
+    gl.useProgram(programInfo.program);
+
+    // Tell WebGL which indices to use to index the vertices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);
@@ -346,10 +351,6 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 
     // Tell the shader we bound the texture to texture unit 0
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    gl.useProgram(programInfo.program);
 
     const normalMatrix = mat4.create();
     mat4.invert(normalMatrix, modelViewMatrix);
@@ -367,6 +368,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
         programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix);
+
 
     {
         const vertexCount = 36;
