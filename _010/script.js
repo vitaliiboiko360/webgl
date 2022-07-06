@@ -552,7 +552,7 @@ const vsSource = `
   
       drawScene(gl, programInfo, buffers, texture, deltaTime);
   
-      window.requestAnimationFrame(render);
+      requestAnimationFrame(render);
     }
-    window.requestAnimationFrame(render);
+    requestAnimationFrame(render);
 }
