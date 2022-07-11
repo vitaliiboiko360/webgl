@@ -1,58 +1,184 @@
+const vertexShader = `
+  attribute vec2 aVertexPosition;
+
+  uniform vec2 uScalingFactor;
+  uniform vec2 uRotationVector;
+
+  void main() {
+    vec2 rotatedPosition = vec2(
+      aVertexPosition.x * uRotationVector.y +
+            aVertexPosition.y * uRotationVector.x,
+      aVertexPosition.y * uRotationVector.y -
+            aVertexPosition.x * uRotationVector.x
+    );
+
+    gl_Position = vec4(rotatedPosition * uScalingFactor, 0.0, 1.0);
+  }
+`;
+
+const fragmentShader = `
+  #ifdef GL_ES
+    precision highp float;
+  #endif
+
+  uniform vec4 uGlobalColor;
+
+  void main() {
+    gl_FragColor = uGlobalColor;
+  }
+`;
+
+let gl = null;
+let glCanvas = null;
+
+// Aspect ratio and coordinate system
+// details
+
+let aspectRatio;
+let currentRotation = [0, 1];
+let currentScale = [1.0, 1.0];
+
+// Vertex information
+
+let vertexArray;
+let vertexBuffer;
+let vertexNumComponents;
+let vertexCount;
+
+// Rendering data shared with the
+// scalers.
+
+let uScalingFactor;
+let uGlobalColor;
+let uRotationVector;
+let aVertexPosition;
+
+// Animation timing
+
+let previousTime = 0.0;
+let degreesPerSecond = 90.0;
+
+
+// Initializing the program is handled through a {{domxref("Window/load_event", "load")}} event handler called `startup()`:
 
 function main() {
-var canvas = document.getElementById("canvas");
-var gl = canvas.getContext("webgl");
-
-if(gl === null) {
-    alert("unable to init webgl");
-    return;
+    window.addEventListener("load", startup, false);
 }
 
-const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-const vertexShaderSource = `
-attribute vec2 a_position;
-void main() {
-    gl_Position = vec4(a_position, 0, 1);
-}`;
-gl.shaderSource(vertexShader, vertexShaderSource);
-gl.compileShader(vertexShader);
+function startup() {
+  glCanvas = document.getElementById("glcanvas");
+  gl = glCanvas.getContext("webgl");
 
-const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-const fragmentShaderSource = `
-void main() {
-    gl_FragColor = vec4(0,1,0,1);  // green
-}`;
-gl.shaderSource(fragmentShader, fragmentShaderSource);
-gl.compileShader(fragmentShader);
+  const shaderSet = [
+    {
+      type: gl.VERTEX_SHADER,
+      source: vertexShader
+    },
+    {
+      type: gl.FRAGMENT_SHADER,
+      source: fragmentShader
+    }
+  ];
 
-const shaderProgram = gl.createProgram();
-gl.attachShader(shaderProgram, vertexShader);
-gl.attachShader(shaderProgram, fragmentShader);
-gl.linkProgram(shaderProgram);
+  shaderProgram = buildShaderProgram(shaderSet);
 
-gl.useProgram(shaderProgram);
+  aspectRatio = glCanvas.width/glCanvas.height;
+  currentRotation = [0, 1];
+  currentScale = [1.0, aspectRatio];
 
-console.log(gl.getProgramParameter(shaderProgram, gl.LINK_STATUS));
+  vertexArray = new Float32Array([
+      -0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
+      -0.5, 0.5, 0.5, -0.5, -0.5, -0.5
+  ]);
 
-var positionLocation = gl.getAttribLocation(shaderProgram, "a_position");
+  vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
 
-var buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([
-        -1.0, -1.0,
-         1.0, -1.0,
-        -1.0,  1.0,
-        -1.0,  1.0,
-         1.0, -1.0,
-         1.0,  1.0]),
-    gl.STATIC_DRAW);
-gl.enableVertexAttribArray(positionLocation);
-gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  vertexNumComponents = 2;
+  vertexCount = vertexArray.length/vertexNumComponents;
 
-gl.drawArrays(gl.TRIANGLES, 0, 6);
+  currentAngle = 0.0;
 
-    };
+  animateScene();
+}
+
+function buildShaderProgram(shaderInfo) {
+  let program = gl.createProgram();
+
+  shaderInfo.forEach(function(desc) {
+    let shader = compileShader(desc.source, desc.type);
+
+    if (shader) {
+      gl.attachShader(program, shader);
+    }
+  });
+
+  gl.linkProgram(program)
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.log("Error linking shader program:");
+    console.log(gl.getProgramInfoLog(program));
+  }
+
+  return program;
+}
+
+function compileShader(source, type) {
+  let shader = gl.createShader(type);
+
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.log(`Error compiling ${type === gl.VERTEX_SHADER ? "vertex" : "fragment"} shader:`);
+    console.log(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function animateScene() {
+  gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+  gl.clearColor(0.8, 0.9, 1.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  let radians = currentAngle * Math.PI / 180.0;
+  currentRotation[0] = Math.sin(radians);
+  currentRotation[1] = Math.cos(radians);
+
+  gl.useProgram(shaderProgram);
+
+  uScalingFactor =
+      gl.getUniformLocation(shaderProgram, "uScalingFactor");
+  uGlobalColor =
+      gl.getUniformLocation(shaderProgram, "uGlobalColor");
+  uRotationVector =
+      gl.getUniformLocation(shaderProgram, "uRotationVector");
+
+  gl.uniform2fv(uScalingFactor, currentScale);
+  gl.uniform2fv(uRotationVector, currentRotation);
+  gl.uniform4fv(uGlobalColor, [0.1, 0.7, 0.2, 1.0]);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+  aVertexPosition =
+      gl.getAttribLocation(shaderProgram, "aVertexPosition");
+
+  gl.enableVertexAttribArray(aVertexPosition);
+  gl.vertexAttribPointer(aVertexPosition, vertexNumComponents,
+        gl.FLOAT, false, 0, 0);
+
+  gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+
+  window.requestAnimationFrame(function(currentTime) {
+    let deltaAngle = ((currentTime - previousTime) / 1000.0)
+          * degreesPerSecond;
+
+    currentAngle = (currentAngle + deltaAngle) % 360;
+
+    previousTime = currentTime;
+    animateScene();
+  });
+}
 
 main();
