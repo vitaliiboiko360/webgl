@@ -6,8 +6,8 @@ const vertexShader = `
 
   void main() {
     vec2 rotatedPosition = vec2(
-      aVertexPosition.x * uRotationVector.y +
-            aVertexPosition.y * uRotationVector.x,
+      aVertexPosition.x * uRotationVector.x +
+            aVertexPosition.y * uRotationVector.y,
       aVertexPosition.y * uRotationVector.y -
             aVertexPosition.x * uRotationVector.x
     );
@@ -171,7 +171,7 @@ function animateScene() {
   gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
 
   window.requestAnimationFrame(function(currentTime) {
-    let deltaAngle = ((currentTime - previousTime) / 1000.0)
+    let deltaAngle = ((currentTime - previousTime) / 10000.0)
           * degreesPerSecond;
 
     currentAngle = (currentAngle + deltaAngle) % 360;
